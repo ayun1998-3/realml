@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="./libraries/ml.min.js"></script>
+    <title>Brains@Play ML</title>
+</head>
+<body>
+    <p id="readout"></p>
+</body>
+
+<script type="module">
+    import * as library from './src/index.js'
+    console.log(library)
+// console.log(ML)
+const result = library.ml.sort({ x: [2, 3, 1], y: [4, 6, 2] })
+// result = {x: [1,2,3], y: [2,4,6]}
+
+const readout = document.getElementById('readout')
+readout.innerHTML = JSON.stringify(result, null, 2)
+
+</script>
+</html>
