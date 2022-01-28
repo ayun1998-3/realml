@@ -20,7 +20,14 @@ let result = library.ml.sort({ x: [2, 3, 1], y: [4, 6, 2] });
 console.log('result',JSON.stringify(result))
 // result = {x: [1,2,3], y: [2,4,6]}
 
-
+let dataValues = new Array();
+const simData = library.data.simulate( 
+        dataValues => {
+            console.log(dataValues)
+            const p = document.createElement('p')
+            p.innerHTML = `${dataValues.slice(-1)}`
+            readout.insertAdjacentElement('beforeend', p)
+        })
 
 // const x = Array.from({length: 1000}, (v, i) => i*0.1)
 // const y = library.data.generate(x)
@@ -38,12 +45,12 @@ console.log('result',JSON.stringify(result))
 
 // // Test
 // const type = 'lda'
-// library.data.simulate( (result)=> {
-//     let yActual = library.data.generate(result)
-//     let labelsActual = library.ml.generate(yActual)
-//     const labelsPredicted = library.ml.predict(model, yActual)
-//     const performance = labelsPredicted.map((v,i) => v === labelsActual[i]).reduce((a,b) => a + b) / labelsPredicted.length
-//     console.log('Performance', Performance)
-// })
+library.data.simulate( (result)=> {
+    let yActual = library.data.generate(result)
+    let labelsActual = library.ml.generate(yActual)
+    const labelsPredicted = library.ml.predict(model, yActual)
+    const performance = labelsPredicted.map((v,i) => v === labelsActual[i]).reduce((a,b) => a + b) / labelsPredicted.length
+    console.log('Performance', Performance)
+})
 </script>
 </html>
