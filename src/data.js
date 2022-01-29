@@ -18,7 +18,10 @@ export const simulate = (func) => { //simulates data stream
     
 }
 
-export const generate = () => {
+export const generate = (dataArray) => { // takes an array and returns generated data
+
+    let results = dataArray.map(val => Math.sin(val))
+    return results
 
 }
 
