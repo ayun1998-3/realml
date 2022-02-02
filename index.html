@@ -13,11 +13,10 @@
 
 <script type="module">
     import * as library from './src/index.js'
-    console.log(library)
-// console.log(ML)
+
     
-let result = library.ml.sort({ x: [2, 3, 1], y: [4, 6, 2] });
-console.log('result',JSON.stringify(result))
+// let result = library.ml.sort({ x: [2, 3, 1], y: [4, 6, 2] });
+// console.log('result',JSON.stringify(result))
 // result = {x: [1,2,3], y: [2,4,6]}
 
 // //data simulation
@@ -30,18 +29,14 @@ console.log('result',JSON.stringify(result))
 //             readout.insertAdjacentElement('beforeend', p)
 //         })
 
-//data generation
+// // Data generation
 const x = Array.from({length: 1000}, (v, i) => i*0.1)
-const y = library.data.generate(x)
+const y = library.data.generate(x, val => Math.sin(val))
 console.log('y', y)
-// y.forEach(value => {
-//     const displayY = document.createElement('p')
-//     displayY.innerHTML = `${value}`
-//     readout.insertAdjacentElement('beforeend', displayY)
-// })
 
-const labels = library.ml.generateLabels(y);
+const labels = library.ml.generateLabels(y, value => (value < 0) ? -1 : 1);
 
+// // Display
 y.forEach((v, i) => {
     const p = document.createElement('p')
     p.innerHTML = `${v},${labels[i]}`

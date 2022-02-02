@@ -5,7 +5,7 @@ export const sort = (o) => {
     return result
 }
 
-export const generateLabels = (y) => { //generate labels
+export const generateLabels = (y, func) => { //takes in classifying function, generates labels
 
-    return y.map(value => (value < 0) ? -1 : 1)
+    return y.map(value => func(value))
 }
