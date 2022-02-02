@@ -5,7 +5,30 @@ export const sort = (o) => {
     return result
 }
 
-export const generateLabels = (y, func) => { //takes in classifying function, generates labels
+export const predict = (model, yActual) => { // takes in model and classes, generates predicted labels
 
-    return y.map(value => func(value))
+    return yActual.map(y => model(y))
+}
+
+
+
+export const generateLabels = (classifier, y) => { //takes in classifying function, generates labels
+
+    return y.map(value => classifier(value))
+}
+
+
+
+export const lda = (someValue) => {
+
+
+}
+
+export const linReg = (x, y) => {
+
+    const regression = new ML.SimpleLinearRegression(x, y)
+
+    const model = predictor => regression.predict(predictor) //returns regression result based on predictor
+
+    return model
 }

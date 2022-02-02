@@ -8,7 +8,7 @@ export const simulate = (func) => { //simulates data stream
         let x = Date.now()
         let val = Math.sin(x) //synthetic wave data
 
-        dataValues.push(val)
+        dataValues.push(val) //populates array with data stream
         func(dataValues);
 
         setTimeout(animate, 1000)
@@ -18,7 +18,7 @@ export const simulate = (func) => { //simulates data stream
     
 }
 
-export const generate = (dataArray, func) => { // takes an array and returns generated data
+export const generate = (func, dataArray) => { // takes an array and returns generated data
 
     let results = dataArray.map(val => func(val))
     return results
