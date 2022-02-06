@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <script src="./libraries/ml.min.js"></script>
     <title>Brains@Play ML</title>
 </head>
+
 <body>
     <div id="readout"></div>
 </body>
@@ -14,48 +16,57 @@
 <script type="module">
     import * as library from './src/index.js'
 
-    
-// let result = library.ml.sort({ x: [2, 3, 1], y: [4, 6, 2] });
-// console.log('result',JSON.stringify(result))
-// result = {x: [1,2,3], y: [2,4,6]}
 
-// //data simulation
-// let dataValues = new Array();
-// const simData = library.data.simulate( 
-//         dataValues => {
-//             console.log(dataValues)
-//             const p = document.createElement('p')
-//             p.innerHTML = `${dataValues.slice(-1)}`
-//             readout.insertAdjacentElement('beforeend', p)
-//         })
+    // let result = library.ml.sort({ x: [2, 3, 1], y: [4, 6, 2] });
+    // console.log('result',JSON.stringify(result))
+    // result = {x: [1,2,3], y: [2,4,6]}
 
-// // Data generation
-const x = Array.from({length: 1000}, (v, i) => i*0.1)
-const y = library.data.generate(val => Math.sin(val), x)
-console.log('y', y)
+    // //data simulation
+    // let dataValues = new Array();
+    // const simData = library.data.simulate( 
+    //         dataValues => {
+    //             console.log(dataValues)
+    //             const p = document.createElement('p')
+    //             p.innerHTML = `${dataValues.slice(-1)}`
+    //             readout.insertAdjacentElement('beforeend', p)
+    //         })
 
-const labels = library.ml.generateLabels(value => (value < 0) ? -1 : 1, y);
+    // // Data generation
+    const x = Array.from({ length: 1000 }, (v, i) => i * 0.1)
+    const y = library.data.generate(val => Math.sin(val), x)
+    console.log('y', y)
 
-// // Display
-y.forEach((v, i) => {
-    const p = document.createElement('p')
-    p.innerHTML = `${v},${labels[i]}`
-    readout.insertAdjacentElement('beforeend', p)
-})
+    const labels = library.ml.generateLabels(value => (value < 0) ? -1 : 1, y);
 
-// // Train
+    // // Display
+    y.forEach((v, i) => {
+        const p = document.createElement('p')
+        p.innerHTML = `${v},${labels[i]}`
+        readout.insertAdjacentElement('beforeend', p)
+    })
 
-const type = 'linReg'
-const model = library.ml[type](x, y)
+    // // Train
+    const xd = library.data.generate2d(val => Math.sin(val), x, 10)
+    const yd = library.ml.generateLabels2d(value => (value < 0) ? 0 : 1, xd)
+    console.log(yd)
 
-// // Test
-library.data.simulate( (result)=> {
-    let yActual = library.data.generate(val => Math.sin(val), result)
-    let labelsActual = library.ml.generateLabels(value => (value < 0) ? -1 : 1, yActual)
-    const labelsPredicted = library.ml.predict(model, yActual)
-    console.log(yActual, labelsActual, labelsPredicted)
-    const performance = labelsPredicted.map((v,i) => v === labelsActual[i]).reduce((a,b) => a + b) / labelsPredicted.length
-    console.log('Performance', Performance)
-})
+    const type = 'naiveBayes'
+    const model = library.ml[type](xd, yd)
+
+    // // Test
+
+    // let results = new Array()
+    // library.data.simulate( (results) => {
+    const xTest = Array.from({ length: 1000 }, (v, i) => i * 0.1) //random values used
+
+    let xActual = library.data.generate2d(val => Math.sin(val), xTest, 10)
+    let yActual = library.ml.generateLabels2d(value => (value < 0) ? 0 : 1, xActual)
+    const yPredicted = library.ml.predict(model, xActual)
+
+    console.log(xActual, yActual, yPredicted)
+    const performance = yPredicted.map((v, i) => v === yActual[i]).reduce((a, b) => a + b) / yPredicted.length
+    console.log('Performance', performance)
+// })
 </script>
+
 </html>

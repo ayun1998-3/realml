@@ -25,6 +25,19 @@ export const generate = (func, dataArray) => { // takes an array and returns gen
 
 }
 
+export const generate2d = (func, dataArray, length) => { // takes an array and return 2d generated data
+
+    dataArray = dataArray.map(val => func(val))
+    let data2d = []
+    for (let i = 0; i < dataArray.length; i += length) {
+        data2d.push(dataArray.slice(i, i+length))
+    }
+
+    console.log(data2d)
+
+    return data2d
+}
+
 export const test = () => {
     return "cool"
 }
