@@ -31,8 +31,56 @@
     //             readout.insertAdjacentElement('beforeend', p)
     //         })
 
+    // // Get Audio data?
+    const start = document.createElement('button')
+    start.click()
+
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+
+        const context = new AudioContext();
+        var analyser = context.createAnalyser();
+        analyser.smoothingTimeConstant = 0.2;
+        analyser.fftSize = 1024;
+        analyser.minDecibels = -127;
+        analyser.maxDecibels = 0;
+
+        var filterNode = context.createBiquadFilter();
+        // filterNode.type = 'highpass';
+        // filterNode.frequency.value = 7000;
+
+        var gainNode = context.createGain(); // Create a gain node to change audio volume.
+        // gainNode.gain.value = 1.0;  
+
+        const microphone = context.createMediaStreamSource(stream);
+        microphone.connect(filterNode);
+        filterNode.connect(gainNode);
+        // microphone.connect(gainNode);
+        gainNode.connect(analyser);
+        analyser.connect(context.destination);
+
+        stream.onended = () => {
+            microphone.disconnect();
+            gainNode.disconnect();
+            filterNode.disconnect()
+        }
+
+        // Show Audio Volume
+        let volumeCallback = null;
+        let volumeInterval = null;
+        const frequencies = new Uint8Array(analyser.frequencyBinCount);
+        let raw = new Uint8Array(analyser.frequencyBinCount)
+        const getData = () => {
+            analyser.getByteFrequencyData(frequencies);
+            analyser.getByteTimeDomainData(raw)
+            console.log(raw, frequencies)
+        };
+
+        setInterval(getData, 100); // Get Data Every 100ms
+
+    })
+
     // // Data generation
-    const x = Array.from({ length: 1000 }, (v, i) => i * 0.1)
+    const x = Array.from({ length: 1000 }, (v, i) => i * 0.1 + 1)
     const y = library.data.generate(val => Math.sin(val), x)
     console.log('y', y)
 
@@ -46,20 +94,21 @@
     })
 
     // // Train
-    const xd = library.data.generate2d(val => Math.sin(val), x, 10)
+    const xd = library.data.generate2d(val => Math.sin(val), x, 2)
     const yd = library.ml.generateLabels2d(value => (value < 0) ? 0 : 1, xd)
     console.log(yd)
 
     const type = 'naiveBayes'
     const model = library.ml[type](xd, yd)
+    console.log(model)
 
     // // Test
 
     // let results = new Array()
     // library.data.simulate( (results) => {
-    const xTest = Array.from({ length: 1000 }, (v, i) => i * 0.1) //random values used
+    const xTest = Array.from({ length: 1000 }, (v, i) => i * 0.1 + 1) //random values used
 
-    let xActual = library.data.generate2d(val => Math.sin(val), xTest, 10)
+    let xActual = library.data.generate2d(val => Math.sin(val), xTest, 2)
     let yActual = library.ml.generateLabels2d(value => (value < 0) ? 0 : 1, xActual)
     const yPredicted = library.ml.predict(model, xActual)
 
