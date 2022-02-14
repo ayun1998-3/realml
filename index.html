@@ -35,49 +35,7 @@
     const start = document.createElement('button')
     start.click()
 
-    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-
-        const context = new AudioContext();
-        var analyser = context.createAnalyser();
-        analyser.smoothingTimeConstant = 0.2;
-        analyser.fftSize = 1024;
-        analyser.minDecibels = -127;
-        analyser.maxDecibels = 0;
-
-        var filterNode = context.createBiquadFilter();
-        // filterNode.type = 'highpass';
-        // filterNode.frequency.value = 7000;
-
-        var gainNode = context.createGain(); // Create a gain node to change audio volume.
-        // gainNode.gain.value = 1.0;  
-
-        const microphone = context.createMediaStreamSource(stream);
-        microphone.connect(filterNode);
-        filterNode.connect(gainNode);
-        // microphone.connect(gainNode);
-        gainNode.connect(analyser);
-        analyser.connect(context.destination);
-
-        stream.onended = () => {
-            microphone.disconnect();
-            gainNode.disconnect();
-            filterNode.disconnect()
-        }
-
-        // Show Audio Volume
-        let volumeCallback = null;
-        let volumeInterval = null;
-        const frequencies = new Uint8Array(analyser.frequencyBinCount);
-        let raw = new Uint8Array(analyser.frequencyBinCount)
-        const getData = () => {
-            analyser.getByteFrequencyData(frequencies);
-            analyser.getByteTimeDomainData(raw)
-            console.log(raw, frequencies)
-        };
-
-        setInterval(getData, 100); // Get Data Every 100ms
-
-    })
+    library.data.generateAudio( x => x)
 
     // // Data generation
     const x = Array.from({ length: 1000 }, (v, i) => i * 0.1 + 1)
