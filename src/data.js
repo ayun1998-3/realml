@@ -1,4 +1,4 @@
-export const generateAudio = (func) => {
+export const simulateAudio = (func) => {
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
 
         const context = new AudioContext();
@@ -36,7 +36,7 @@ export const generateAudio = (func) => {
         const getData = () => {
             analyser.getByteFrequencyData(frequencies);
             analyser.getByteTimeDomainData(raw)
-            func(raw) // perform operation on latest raw audio data
+            func(frequencies) // perform operation on latest raw audio data
             console.log(raw, frequencies)
         };
 
