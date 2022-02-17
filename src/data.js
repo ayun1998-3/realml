@@ -33,14 +33,24 @@ export const simulateAudio = (func) => {
         let volumeInterval = null;
         const frequencies = new Uint8Array(analyser.frequencyBinCount);
         let raw = new Uint8Array(analyser.frequencyBinCount)
+
+        let time = 0
         const getData = () => {
+            time ++;
+            console.log(time)
             analyser.getByteFrequencyData(frequencies);
             analyser.getByteTimeDomainData(raw)
             func(frequencies) // perform operation on latest raw audio data
             console.log(raw, frequencies)
+
+            if (time === 100) { //end stream at 10s
+                stream.onended()
+                clearInterval(myInterval)
+            }
         };
 
-        setInterval(getData, 100); // Get Data Every 100ms
+        var myInterval = setInterval(getData, 100); // Get Data Every 100ms
+
 
     })
 }

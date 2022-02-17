@@ -10,6 +10,7 @@
 </head>
 
 <body>
+    <div id="startup"></div>
     <div id="readout"></div>
 </body>
 
@@ -33,13 +34,16 @@
 
     // // Get Audio data?
     const start = document.createElement('button')
-    start.click()
+    start.innerHTML = 'Record Audio'
+    startup.insertAdjacentElement('beforeend', start)
 
     let audioData = []
-    library.data.simulateAudio(data => {
-        audioData.push(data)
-        console.log(audioData)
-    })
+    start.onclick = function () {
+        library.data.simulateAudio(data => {
+            audioData.push(data)
+            console.log(audioData)
+        })
+    }
 
     // // Data generation
     const x = Array.from({ length: 1000 }, (v, i) => i * 0.1 + 1)
