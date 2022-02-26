@@ -1,5 +1,12 @@
-export const simulateAudio = (func) => {
+import * as components from "https://cdn.jsdelivr.net/npm/brainsatplay-components@latest/dist/index.esm.js"
+
+export const simulateAudio = (func, onSuccess) => {
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+
+        const spectrogram = new components.streams.data.Spectrogram()
+        const timeseries = new components.streams.data.TimeSeries()
+        document.body.insertAdjacentElement('beforeend', timeseries)
+        document.body.insertAdjacentElement('beforeend', spectrogram)
 
         const context = new AudioContext();
         var analyser = context.createAnalyser();
@@ -20,7 +27,7 @@ export const simulateAudio = (func) => {
         filterNode.connect(gainNode);
         // microphone.connect(gainNode);
         gainNode.connect(analyser);
-        analyser.connect(context.destination);
+        // analyser.connect(context.destination);
 
         stream.onended = () => {
             microphone.disconnect();
@@ -32,20 +39,28 @@ export const simulateAudio = (func) => {
         let volumeCallback = null;
         let volumeInterval = null;
         const frequencies = new Uint8Array(analyser.frequencyBinCount);
-        let raw = new Uint8Array(analyser.frequencyBinCount)
+        let raw = new Uint8Array(1)
 
         let time = 0
         const getData = () => {
             time ++;
-            console.log(time)
+            // console.log(time)
             analyser.getByteFrequencyData(frequencies);
             analyser.getByteTimeDomainData(raw)
+
+            const arr = Array.from(raw)
+            // const arr = Array.from(Array(5), () => Array.from(Array(5), () => Math.random()*100 ))
+            timeseries.data = [arr][0]
+            // console.log("t",timeseries.data)
+            spectrogram.data = Array.from(frequencies)
+
             func(frequencies) // perform operation on latest raw audio data
-            console.log(raw, frequencies)
+            // console.log(raw, frequencies)
 
             if (time === 100) { //end stream at 10s
                 stream.onended()
                 clearInterval(myInterval)
+                onSuccess()
             }
         };
 

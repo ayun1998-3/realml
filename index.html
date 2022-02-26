@@ -18,6 +18,7 @@
     import * as library from './src/index.js'
 
 
+
     // let result = library.ml.sort({ x: [2, 3, 1], y: [4, 6, 2] });
     // console.log('result',JSON.stringify(result))
     // result = {x: [1,2,3], y: [2,4,6]}
@@ -37,50 +38,67 @@
     start.innerHTML = 'Record Audio'
     startup.insertAdjacentElement('beforeend', start)
 
-    let audioData = []
+    let training1 = [] // contains arrays of length 512, with first < 100 elements being non-zero
+    let training2 = []
+    
     start.onclick = function () {
-        library.data.simulateAudio(data => {
-            audioData.push(data)
-            console.log(audioData)
-        })
+
+        // 3s countdown
+        library.time.timer(3)
+
+        setTimeout(library.data.simulateAudio, 3000, data => {
+            training1.push(data)
+        },
+            function onSuccess() {
+                console.log('audio: ', training1);
+
+                library.time.timer(5) // next trial
+
+                setTimeout(library.data.simulateAudio, 5000, data => {
+                    training2.push(data)
+                },
+                    function onSuccess() {console.log('audio: ', training2)})
+
+            })
     }
 
-    // // Data generation
-    const x = Array.from({ length: 1000 }, (v, i) => i * 0.1 + 1)
-    const y = library.data.generate(val => Math.sin(val), x)
-    console.log('y', y)
 
-    const labels = library.ml.generateLabels(value => (value < 0) ? -1 : 1, y);
+    // // // Data generation
+    // const x = Array.from({ length: 1000 }, (v, i) => i * 0.1 + 1)
+    // const y = library.data.generate(val => Math.sin(val), x)
+    // console.log('y', y)
 
-    // // Display
-    y.forEach((v, i) => {
-        const p = document.createElement('p')
-        p.innerHTML = `${v},${labels[i]}`
-        readout.insertAdjacentElement('beforeend', p)
-    })
+    // const labels = library.ml.generateLabels(value => (value < 0) ? -1 : 1, y);
 
-    // // Train
-    const xd = library.data.generate2d(val => Math.sin(val), x, 2)
-    const yd = library.ml.generateLabels2d(value => (value < 0) ? 0 : 1, xd)
-    console.log(yd)
+    // // // Display
+    // y.forEach((v, i) => {
+    //     const p = document.createElement('p')
+    //     p.innerHTML = `${v},${labels[i]}`
+    //     readout.insertAdjacentElement('beforeend', p)
+    // })
 
-    const type = 'naiveBayes'
-    const model = library.ml[type](xd, yd)
-    console.log(model)
+    // // // Train
+    // const xd = library.data.generate2d(val => Math.sin(val), x, 2)
+    // const yd = library.ml.generateLabels2d(value => (value < 0) ? 0 : 1, xd)
+    // console.log(yd)
 
-    // // Test
+    // const type = 'naiveBayes'
+    // const model = library.ml[type](xd, yd)
+    // console.log(model)
 
-    // let results = new Array()
-    // library.data.simulate( (results) => {
-    const xTest = Array.from({ length: 1000 }, (v, i) => i * 0.1 + 1) //random values used
+    // // // Test
 
-    let xActual = library.data.generate2d(val => Math.sin(val), xTest, 2)
-    let yActual = library.ml.generateLabels2d(value => (value < 0) ? 0 : 1, xActual)
-    const yPredicted = library.ml.predict(model, xActual)
+    // // let results = new Array()
+    // // library.data.simulate( (results) => {
+    // const xTest = Array.from({ length: 1000 }, (v, i) => i * 0.1 + 1) //random values used
 
-    console.log(xActual, yActual, yPredicted)
-    const performance = yPredicted.map((v, i) => v === yActual[i]).reduce((a, b) => a + b) / yPredicted.length
-    console.log('Performance', performance)
+    // let xActual = library.data.generate2d(val => Math.sin(val), xTest, 2)
+    // let yActual = library.ml.generateLabels2d(value => (value < 0) ? 0 : 1, xActual)
+    // const yPredicted = library.ml.predict(model, xActual)
+
+    // console.log(xActual, yActual, yPredicted)
+    // const performance = yPredicted.map((v, i) => v === yActual[i]).reduce((a, b) => a + b) / yPredicted.length
+    // console.log('Performance', performance)
 // })
 </script>
 
