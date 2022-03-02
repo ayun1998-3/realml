@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <script src="./libraries/ml.min.js"></script>
+    <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
     <title>Brains@Play ML</title>
 </head>
 
@@ -36,11 +37,15 @@
     // // Get Audio data?
     const start = document.createElement('button')
     start.innerHTML = 'Record Audio'
+    const test = document.createElement('button')
+    test.innerHTML = 'Test audio real-time'
     startup.insertAdjacentElement('beforeend', start)
 
     let training1 = [] // contains arrays of length 512, with first < 100 elements being non-zero
     let training2 = []
-    
+    const class1 = 'alarm'
+    const class2 = 'waves'
+
     start.onclick = function () {
 
         // 3s countdown
@@ -50,18 +55,44 @@
             training1.push(data)
         },
             function onSuccess() {
-                console.log('audio: ', training1);
+                console.log('audio: ', training1)
+                let labels1 = training1.map(x => class1) // generate labels
+                let labels2
+                console.log(labels1)
 
                 library.time.timer(5) // next trial
 
-                setTimeout(library.data.simulateAudio, 5000, data => {
-                    training2.push(data)
-                },
-                    function onSuccess() {console.log('audio: ', training2)})
-                    library.ml.trainNN(training1)
+                setTimeout(library.data.simulateAudio, 5000,
+                    data => {
+                        training2.push(data)
+                    },
+                    function onSuccess() {
+                        console.log('audio: ', training2)
+                        labels2 = training2.map(x => class2)
+                        console.log(labels2)
+
+                        let trainingData = training1.concat(training2)
+
+                        let labels = labels1.concat(labels2)
+                        library.ml.trainNN(trainingData, labels)
+                        startup.insertAdjacentElement('beforeend', test) // add testing
+
+                    }
+                )
+
 
             })
     }
+
+    test.onclick = function () {
+        library.data.simulateAudio( data => {
+            library.ml.testNN(data)
+        },
+        
+        function onSuccess() {})
+
+    }
+    
 
 
     // // // Data generation
