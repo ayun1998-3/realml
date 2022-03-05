@@ -40,59 +40,104 @@
     const test = document.createElement('button')
     test.innerHTML = 'Test audio real-time'
     startup.insertAdjacentElement('beforeend', start)
+    startup.insertAdjacentElement('beforeend', test) // add testing
+
 
     let training1 = [] // contains arrays of length 512, with first < 100 elements being non-zero
     let training2 = []
     const class1 = 'alarm'
     const class2 = 'waves'
 
+    const helloData = []
+    const goodbyeData = []
+
+
     start.onclick = function () {
 
         // 3s countdown
-        library.time.timer(3)
+        // library.time.timer(3)
 
-        setTimeout(library.data.simulateAudio, 3000, data => {
-            training1.push(data)
-        },
-            function onSuccess() {
-                console.log('audio: ', training1)
-                let labels1 = training1.map(x => class1) // generate labels
-                let labels2
-                console.log(labels1)
+        // setTimeout(library.data.simulateAudio, 3000, data => {
+        //     training1.push(data)
+        // },
+        //     function onSuccess() {
+        //         console.log('audio: ', training1)
+        //         let labels1 = training1.map(x => class1) // generate labels
+        //         let labels2
+        //         console.log(labels1)
 
-                library.time.timer(5) // next trial
+        //         library.time.timer(5) // next trial
 
-                setTimeout(library.data.simulateAudio, 5000,
-                    data => {
-                        training2.push(data)
+        //         setTimeout(library.data.simulateAudio, 5000,
+        //             data => {
+        //                 training2.push(data)
+        //             },
+        //             function onSuccess() {
+        //                 console.log('audio: ', training2)
+        //                 labels2 = training2.map(x => class2)
+        //                 console.log(labels2)
+
+        //                 let trainingData = training1.concat(training2)
+
+        //                 let labels = labels1.concat(labels2)
+        //                 library.ml.trainNN(trainingData, labels)
+        //                 startup.insertAdjacentElement('beforeend', test) // add testing
+
+        //             }
+        //         )
+
+
+        //     })
+
+        // speech recognition
+        let i = 0;
+
+
+        let func = function () {
+            library.time.timer(3)
+            console.log('say hello')
+            let temp = []
+            setTimeout(library.data.simulateAudio, 3000, data => {
+                temp.push(data)
+            },
+                function onSuccess() {
+                    helloData.push(temp)
+                    temp = []
+
+                    library.time.timer(3)
+                    console.log('say goodbye')
+                    setTimeout(library.data.simulateAudio, 3000, data => {
+                        temp.push(data)
                     },
-                    function onSuccess() {
-                        console.log('audio: ', training2)
-                        labels2 = training2.map(x => class2)
-                        console.log(labels2)
-
-                        let trainingData = training1.concat(training2)
-
-                        let labels = labels1.concat(labels2)
-                        library.ml.trainNN(trainingData, labels)
-                        startup.insertAdjacentElement('beforeend', test) // add testing
-
-                    }
-                )
-
-
-            })
+                        function onSucess() {
+                            goodbyeData.push(temp)
+                            console.log('hello', helloData, 'goodbye', goodbyeData)
+                            i++
+                            if (i < 2) func()
+                        }, 1)
+                }, 1
+            )
+        }
+        func()
     }
 
     test.onclick = function () {
-        library.data.simulateAudio( data => {
-            library.ml.testNN(data)
-        },
-        
-        function onSuccess() {})
+
+        let data = helloData.concat(goodbyeData)
+        // let data = [
+        //     [[4.9, 3.2, 1.2, 0.4],
+        //     [5.4, 3.3, 1.4, 0.9],],
+        //     [[5.6, 2.3, 7.0, 4.1], [3.4, 3.5, 8.8, 0.1]]
+        // ];
+        library.ml.pca(data)
+        // library.data.simulateAudio(data => {
+        //     library.ml.testNN(data)
+        // },
+
+        //     function onSuccess() { })
 
     }
-    
+
 
 
     // // // Data generation

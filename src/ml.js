@@ -11,6 +11,7 @@ export const predict = (model, xActual) => { // takes in model and classes, gene
 
     let yPredicted = model.predict(xActual)
     return yPredicted
+
 }
 
 
@@ -41,9 +42,10 @@ export const lda = (someValue) => {
 
 }
 
-export const pca = (x, y) => {
+export const pca = (dataset) => {
 
     const pca = new ML.PCA(dataset)
+    console.log(pca.getExplainedVariance());
 }
 
 export const linReg = (x, y) => {
@@ -115,8 +117,10 @@ function handleResults(error, result) {
     }
     
     if (Math.abs(result[0].confidence - result[1].confidence) > 0.35) {
-    console.log((result[0].confidence > result[1].confidence) ? result[0].label : result[1].label);
-    console.log(result) // {label: 'red', confidence: 0.8};
+
+        console.log((result[0].confidence > result[1].confidence) ? result[0].label : result[1].label);
+        console.log(result) // {label: 'red', confidence: 0.8}
+
     }
 }  
 
