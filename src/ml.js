@@ -63,38 +63,103 @@ export const trainNN = (data, labels) => {
 
     const options = {
         task: 'classification',
+        // inputs: [9, 20],
         debug: true
     }
 
     nn = ml5.neuralNetwork(options);
 
-    // data.forEach(sample => {
-
-    //     const input = [] // input data
-    //     const output = []  // classification
-    //     nn.addData(input, output)
-
-    // })
 
     console.log(data)
     console.log(labels)
 
+    // remove zeroes from data to prepare data for nn.normalizedata
+    data = data.map(sample => sample.map(period => period.map(value => value + Math.random())))
+
+    // for (let value = 0; value < data[0][0].length; value ++) {
+    //     let isZero = true
+    //     for (let sample = 0; sample < data.length; sample ++){
+    //         for (let period = 0; period < sample.length; period ++)  {
+    //             if (data[sample][period][value] != 0) {
+    //                 isZero = false
+    //                 break;
+    //             }
+    //         }
+    //     }
+
+    //     if (isZero) {
+    //         for (let sample = 0; sample < data.length; sample ++){
+    //             for (let period = 0; period < sample.length; period ++)  {
+    //                 data[sample][period].splice(value, 1)
+    //             }
+    //         }
+    //     }
+    //     value--
+    // }
+
+    console.log(data)
     for (let i = 0; i < data.length; i++) {
-        const input = data[i]
+        // const input = data[i].flat(Infinity)
+
+        const sumData = data[i].reduce(
+            (x, y) => {
+                let temp = []
+                for (let j = 0; j < x.length; j++) {
+                    temp.push(x[j] + y[j])
+                }
+                return temp
+            }
+        )
+
+        const avgData = sumData.map(x => x / data[i].length)
+        const input = avgData
+        console.log(input)
+        // console.log('input', input)
         const output = {type: labels[i]}
         nn.addData(input, output)
     }
 
 
-    console.log(nn.data)
+    console.log(nn.neuralNetworkData.data)
+
     nn.normalizeData()
     console.log(nn.data.training)
+
+
+    //delete NaNs
+    // nn.data.training = nn.data.training.map(sample => {
+    //     let arrayValues = []
+    //     for (const value in sample.xs) {
+    //         arrayValues.push(sample.xs[value])
+    //     }
+    //     console.log(arrayValues)
+    //     arrayValues = arrayValues.filter(value => !Number.isNaN(value))
+    //     console.log(arrayValues)
+
+    //     let temp = sample
+    //     temp.xs = {}
+    //     arrayValues.forEach((value, ind) => {
+    //         console.log(ind)
+    //         ind = ind.toString()
+            
+    //         temp.xs[ind] = value}
+    //         )
+    //     console.log(temp)
+    //     return temp
+    // })
+
+    console.log(nn.data.training)
+
 
     const trainingOptions = {
         epochs: 32,
         batchSize: 12
+
     }
-    nn.train(trainingOptions);
+    function doneTraining() {
+        console.log('done!');
+      }    
+    nn.train(trainingOptions, doneTraining);
     
     // function finishedTraining(){
     //     classify();
@@ -116,20 +181,40 @@ function handleResults(error, result) {
       return;
     }
     
-    if (Math.abs(result[0].confidence - result[1].confidence) > 0.35) {
+    const confidences = result.map(type => type.confidence)
+    const maxPossibility = Math.max(...confidences)
+    console.log(result) // {label: 'red', confidence: 0.8}
+    if (maxPossibility > 0.5) {
 
-        console.log((result[0].confidence > result[1].confidence) ? result[0].label : result[1].label);
-        console.log(result) // {label: 'red', confidence: 0.8}
+        console.log(result[confidences.indexOf(maxPossibility)].label); // prints label of result with highest confidence
+        
 
     }
 }  
 
 export const testNN = (data) => {
 
-    const input = data // testing data
-    nn.classify(input, handleResults)
+    // console.log(data)
+    // let input = data.map(period => period.map(value => value + Math.random()))
 
-    // stuff to calculate accuracy?
+    const sumData = data.reduce(
+        (x, y) => {
+            let temp = []
+            for (let j = 0; j < x.length; j++) {
+                temp.push(x[j] + y[j])
+            }
+            return temp
+        }
+    )
+
+    const avgData = sumData.map(x => x / data.length)
+    const input = avgData
+      // testing data
+    // console.log(input)
+    // const flatInput = input.flat(Infinity)
+    // console.log(flatInput)
+
+    nn.classify(input, handleResults)
 
 
 }

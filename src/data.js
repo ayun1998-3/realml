@@ -3,10 +3,10 @@ import * as components from "https://cdn.jsdelivr.net/npm/brainsatplay-component
 export const simulateAudio = (func, onSuccess, duration) => { //duration of recording in seconds
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
 
-        const spectrogram = new components.streams.data.Spectrogram()
-        const timeseries = new components.streams.data.TimeSeries()
-        document.body.insertAdjacentElement('beforeend', timeseries)
-        document.body.insertAdjacentElement('beforeend', spectrogram)
+        // const spectrogram = new components.streams.data.Spectrogram()
+        // const timeseries = new components.streams.data.TimeSeries()
+        // document.body.insertAdjacentElement('beforeend', timeseries)
+        // document.body.insertAdjacentElement('beforeend', spectrogram)
 
         const context = new AudioContext();
         var analyser = context.createAnalyser();
@@ -50,11 +50,12 @@ export const simulateAudio = (func, onSuccess, duration) => { //duration of reco
 
             const arr = Array.from(raw)
             // const arr = Array.from(Array(5), () => Array.from(Array(5), () => Math.random()*100 ))
-            timeseries.data = [arr][0]
+            // timeseries.data = [arr][0]
             // console.log("t",timeseries.data)
-            spectrogram.data = Array.from(frequencies)
+            // spectrogram.data = Array.from(frequencies)
 
-            if (time != 1) func(frequencies.slice(0, 20)) // perform operation on latest raw audio data
+            if (time != 1) func(Array.from(frequencies.slice(0, 50))) // perform operation on latest raw audio data
+            // sliced at 50 because data values after index 50 are all 0s
 
             // console.log(raw, frequencies)
 
