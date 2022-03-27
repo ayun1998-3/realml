@@ -1,25 +1,236 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <script src="./libraries/ml.min.js"></script>
+    <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
     <title>Brains@Play ML</title>
 </head>
+
 <body>
-    <p id="readout"></p>
+    <div id="startup"></div>
+    <div id="readout"></div>
 </body>
 
 <script type="module">
+ 
     import * as library from './src/index.js'
-    console.log(library)
-// console.log(ML)
-const result = library.ml.sort({ x: [2, 3, 1], y: [4, 6, 2] })
-// result = {x: [1,2,3], y: [2,4,6]}
 
-const readout = document.getElementById('readout')
-readout.innerHTML = JSON.stringify(result, null, 2)
 
+
+    // let result = library.ml.sort({ x: [2, 3, 1], y: [4, 6, 2] });
+    // console.log('result',JSON.stringify(result))
+    // result = {x: [1,2,3], y: [2,4,6]}
+
+    // //data simulation
+    // let dataValues = new Array();
+    // const simData = library.data.simulate( 
+    //         dataValues => {
+    //             console.log(dataValues)
+    //             const p = document.createElement('p')
+    //             p.innerHTML = `${dataValues.slice(-1)}`
+    //             readout.insertAdjacentElement('beforeend', p)
+    //         })
+
+    // // Get Audio data?
+    const start = document.createElement('button')
+    start.innerHTML = 'Record Audio'
+    const test = document.createElement('button')
+    test.innerHTML = 'Test audio real-time'
+    startup.insertAdjacentElement('beforeend', start)
+    startup.insertAdjacentElement('beforeend', test) // add testing
+    let prompt = document.createElement('h2')
+    readout.insertAdjacentElement('beforeend', prompt)
+
+
+    let training = []
+    let labels = []
+    const class1 = 'one'
+    const class2 = 'two'
+    // const class3 = 'three'
+    // const class1 = 'alarm'
+    // const class2 = 'waves'
+
+    //test code
+    // let array1 = [[[2, 4, 6], [4, 5, 4]],[5, 2]]
+    // let ind = array1.flat(Infinity)
+    // console.log(ind)
+    // console.log(array1[0].flatten())
+
+    start.onclick = async function () {
+
+
+        // 3s countdown
+        // library.time.timer(3)
+
+        // setTimeout(library.data.simulateAudio, 3000, data => {
+        //     training1.push(data)
+        // },
+        //     function onSuccess() {
+        //         console.log('audio: ', training1)
+        //         let labels1 = training1.map(x => class1) // generate labels
+        //         let labels2
+        //         console.log(labels1)
+
+        //         library.time.timer(5) // next trial
+
+        //         setTimeout(library.data.simulateAudio, 5000,
+        //             data => {
+        //                 training2.push(data)
+        //             },
+        //             function onSuccess() {
+        //                 console.log('audio: ', training2)
+        //                 labels2 = training2.map(x => class2)
+        //                 console.log(labels2)
+
+        //                 let trainingData = training1.concat(training2)
+
+        //                 let labels = labels1.concat(labels2)
+        //                 library.ml.trainNN(trainingData, labels)
+        //                 startup.insertAdjacentElement('beforeend', test) // add testing
+
+        //             }
+        //         )
+
+
+        //     })
+
+        // speech recognition
+        let i = 0
+        let sampleSize = 1 // number of sampled recordings taken for each class
+        let duration = 1 // length of recording in seconds
+
+        let func = async function () {
+
+            await library.time.timer(1)
+            prompt.innerHTML = `say ${class1}`
+            let temp = []
+
+            library.data.simulateAudio(data => temp.push(data),
+                function onSuccess() {
+                    training.push(temp)
+                    labels.push(class1)
+                    temp = []
+                },
+                duration)
+
+            await library.time.timer(duration, false)
+            await library.time.timer(1)
+            prompt.innerHTML = `say ${class2}`
+
+            library.data.simulateAudio(data => temp.push(data),
+                function onSuccess() {
+                    training.push(temp)
+                    labels.push(class2)
+                    temp = []
+
+                    // i++
+                    // if (i < sampleSize) func()
+                    // else {
+                    //     train()
+                    //     // return Promise((resolve, reject) => resolve)
+                    // }
+                },
+                duration)
+
+            await library.time.timer(duration, false)
+            await library.time.timer(1)
+            // prompt.innerHTML = `say ${class3}`
+            prompt.innerHTML = 'background noise'
+
+            library.data.simulateAudio(data => temp.push(data),
+                function onSuccess() {
+                    training.push(temp)
+                    labels.push('background')
+                    // labels.push(class3)
+                    temp = []
+
+                    i++
+                    if (i < sampleSize) func()
+                    else {
+                        train()
+                        // return Promise((resolve, reject) => resolve)
+                    }
+                },
+                duration)
+
+        }
+
+        func()
+        const train = () => {
+            console.log('works')
+            library.ml.trainNN(training, labels)
+        }
+
+    }
+
+    test.onclick = async function () {
+
+        // let data = helloData.concat(goodbyeData)
+        // let data = [
+        //     [[4.9, 3.2, 1.2, 0.4],
+        //     [5.4, 3.3, 1.4, 0.9],],
+        //     [[5.6, 2.3, 7.0, 4.1], [3.4, 3.5, 8.8, 0.1]]
+        // ];
+        // library.ml.pca(data)
+        await library.time.timer(1)
+        prompt.innerHTML = 'say something'
+        let testingData = []
+        // let temp = []
+
+        library.data.simulateAudio(data => testingData.push(data),
+            function onSuccess() {
+                // testingData.push(temp)
+                // temp = []
+                library.ml.testNN(testingData)
+            },
+            1)
+
+
+    }
+
+
+
+    // // // Data generation
+    // const x = Array.from({ length: 1000 }, (v, i) => i * 0.1 + 1)
+    // const y = library.data.generate(val => Math.sin(val), x)
+    // console.log('y', y)
+
+    // const labels = library.ml.generateLabels(value => (value < 0) ? -1 : 1, y);
+
+    // // // Display
+    // y.forEach((v, i) => {
+    //     const p = document.createElement('p')
+    //     p.innerHTML = `${v},${labels[i]}`
+    //     readout.insertAdjacentElement('beforeend', p)
+    // })
+
+    // // // Train
+    // const xd = library.data.generate2d(val => Math.sin(val), x, 2)
+    // const yd = library.ml.generateLabels2d(value => (value < 0) ? 0 : 1, xd)
+    // console.log(yd)
+
+    // const type = 'naiveBayes'
+    // const model = library.ml[type](xd, yd)
+    // console.log(model)
+
+    // // // Test
+
+    // // let results = new Array()
+    // // library.data.simulate( (results) => {
+    // const xTest = Array.from({ length: 1000 }, (v, i) => i * 0.1 + 1) //random values used
+
+    // let xActual = library.data.generate2d(val => Math.sin(val), xTest, 2)
+    // let yActual = library.ml.generateLabels2d(value => (value < 0) ? 0 : 1, xActual)
+    // const yPredicted = library.ml.predict(model, xActual)
+
+    // console.log(xActual, yActual, yPredicted)
+    // const performance = yPredicted.map((v, i) => v === yActual[i]).reduce((a, b) => a + b) / yPredicted.length
+    // console.log('Performance', performance)
+// })
 </script>
+
 </html>
