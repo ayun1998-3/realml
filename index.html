@@ -16,6 +16,7 @@
 </body>
 
 <script type="module">
+ 
     import * as library from './src/index.js'
 
 
@@ -41,12 +42,15 @@
     test.innerHTML = 'Test audio real-time'
     startup.insertAdjacentElement('beforeend', start)
     startup.insertAdjacentElement('beforeend', test) // add testing
+    let prompt = document.createElement('h2')
+    readout.insertAdjacentElement('beforeend', prompt)
 
 
     let training = []
     let labels = []
     const class1 = 'one'
     const class2 = 'two'
+    // const class3 = 'three'
     // const class1 = 'alarm'
     // const class2 = 'waves'
 
@@ -96,13 +100,13 @@
 
         // speech recognition
         let i = 0
-        let sampleSize = 10  // number of sampled recordings taken for each class
+        let sampleSize = 1 // number of sampled recordings taken for each class
         let duration = 1 // length of recording in seconds
 
         let func = async function () {
 
             await library.time.timer(1)
-            console.log('say ' + class1)
+            prompt.innerHTML = `say ${class1}`
             let temp = []
 
             library.data.simulateAudio(data => temp.push(data),
@@ -115,24 +119,33 @@
 
             await library.time.timer(duration, false)
             await library.time.timer(1)
-            console.log('say ' + class2)
+            prompt.innerHTML = `say ${class2}`
 
             library.data.simulateAudio(data => temp.push(data),
                 function onSuccess() {
                     training.push(temp)
                     labels.push(class2)
                     temp = []
+
+                    // i++
+                    // if (i < sampleSize) func()
+                    // else {
+                    //     train()
+                    //     // return Promise((resolve, reject) => resolve)
+                    // }
                 },
                 duration)
 
             await library.time.timer(duration, false)
             await library.time.timer(1)
-            console.log('background')
+            // prompt.innerHTML = `say ${class3}`
+            prompt.innerHTML = 'background noise'
 
             library.data.simulateAudio(data => temp.push(data),
                 function onSuccess() {
                     training.push(temp)
                     labels.push('background')
+                    // labels.push(class3)
                     temp = []
 
                     i++
@@ -144,26 +157,6 @@
                 },
                 duration)
 
-            // setTimeout(library.data.simulateAudio, 3000, data => {
-            //     temp.push(data)
-            // },
-            //     function onSuccess() {
-            //         training1.push(temp)
-            //         temp = []
-
-            //         library.time.timer(3)
-            //         console.log('say '+ class2)
-            //         setTimeout(library.data.simulateAudio, 3000, data => {
-            //             temp.push(data)
-            //         },
-            //             function onSucess() {
-            //                 training2.push(temp)
-            //                 console.log(class1, training1, class2, training2)
-            //                 i++
-            //                 if (i < 2) func()
-            //             }, 1)
-            //     }, 1
-            // )
         }
 
         func()
@@ -184,7 +177,7 @@
         // ];
         // library.ml.pca(data)
         await library.time.timer(1)
-        console.log('say something')
+        prompt.innerHTML = 'say something'
         let testingData = []
         // let temp = []
 

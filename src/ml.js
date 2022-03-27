@@ -1,5 +1,14 @@
 // import * as ml5 from "https://unpkg.com/ml5@latest/dist/ml5.min.js"
 
+const options = {
+    task: 'classification',
+    // inputs: [9, 20],
+    debug: true
+}
+
+let nn = ml5.neuralNetwork(options);
+nn.load('C:\Users\auste\Downloads\model.weights.bin', () => { console.log('Model loaded') })
+
 export const sort = (o) => {
     console.log(ML)
     const result = ML.ArrayXY.sortX(o);
@@ -57,18 +66,8 @@ export const linReg = (x, y) => {
     return model
 }
 
-let nn;
 
 export const trainNN = (data, labels) => {
-
-    const options = {
-        task: 'classification',
-        // inputs: [9, 20],
-        debug: true
-    }
-
-    nn = ml5.neuralNetwork(options);
-
 
     console.log(data)
     console.log(labels)
@@ -158,8 +157,13 @@ export const trainNN = (data, labels) => {
     }
     function doneTraining() {
         console.log('done!');
+        console.log(nn.model)
+
       }    
     nn.train(trainingOptions, doneTraining);
+
+    nn.save('model', () => {console.log('model saved')})
+
     
     // function finishedTraining(){
     //     classify();
@@ -184,11 +188,21 @@ function handleResults(error, result) {
     const confidences = result.map(type => type.confidence)
     const maxPossibility = Math.max(...confidences)
     console.log(result) // {label: 'red', confidence: 0.8}
-    if (maxPossibility > 0.5) {
 
-        console.log(result[confidences.indexOf(maxPossibility)].label); // prints label of result with highest confidence
-        
+    let p = document.createElement('p')
+    document.body.insertAdjacentElement('beforeend', p)
 
+    if (maxPossibility > 0.7) {
+
+        let prediction = result[confidences.indexOf(maxPossibility)].label
+        console.log(prediction); // prints label of result with highest confidence
+
+        p.innerHTML = `Prediction: ${prediction} \n Confidence: ${maxPossibility}`
+
+    }
+
+    else{
+        p.innerHTML = 'Not Sure'
     }
 }  
 
