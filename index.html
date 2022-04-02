@@ -40,8 +40,13 @@
     start.innerHTML = 'Record Audio'
     const test = document.createElement('button')
     test.innerHTML = 'Test audio real-time'
+    
+    const loadM = document.createElement('button')
+    loadM.innerHTML = 'Load local model'
+
     startup.insertAdjacentElement('beforeend', start)
     startup.insertAdjacentElement('beforeend', test) // add testing
+    startup.insertAdjacentElement('beforeend', loadM)
     let prompt = document.createElement('h2')
     readout.insertAdjacentElement('beforeend', prompt)
 
@@ -100,7 +105,7 @@
 
         // speech recognition
         let i = 0
-        let sampleSize = 1 // number of sampled recordings taken for each class
+        let sampleSize = 4 // number of sampled recordings taken for each class
         let duration = 1 // length of recording in seconds
 
         let func = async function () {
@@ -190,6 +195,10 @@
             1)
 
 
+    }
+
+    loadM.onclick = async () => {
+        library.ml.loadModel()
     }
 
 

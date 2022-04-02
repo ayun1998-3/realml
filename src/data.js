@@ -54,7 +54,8 @@ export const simulateAudio = (func, onSuccess, duration) => { //duration of reco
             // console.log("t",timeseries.data)
             spectrogram.data = Array.from(frequencies.slice(0, 130))
 
-            if (time != 1) func(Array.from(frequencies.slice(0, 130))) // perform operation on latest raw audio data
+            // if (time != 1)
+            func(Array.from(frequencies.slice(0, 130))) // perform operation on latest raw audio data
             // sliced at 50 because data values after index 50 are all 0s
 
             // console.log(raw, frequencies)f

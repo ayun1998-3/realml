@@ -6,8 +6,7 @@ const options = {
     debug: true
 }
 
-let nn = ml5.neuralNetwork(options);
-nn.load('C:\Users\auste\Downloads\model.weights.bin', () => { console.log('Model loaded') })
+const nn = ml5.neuralNetwork(options);
 
 export const sort = (o) => {
     console.log(ML)
@@ -73,7 +72,7 @@ export const trainNN = (data, labels) => {
     console.log(labels)
 
     // remove zeroes from data to prepare data for nn.normalizedata
-    data = data.map(sample => sample.map(period => period.map(value => value + Math.random())))
+    // data = data.map(sample => sample.map(period => period.map(value => value + Math.random())))
 
     // for (let value = 0; value < data[0][0].length; value ++) {
     //     let isZero = true
@@ -156,13 +155,13 @@ export const trainNN = (data, labels) => {
 
     }
     function doneTraining() {
+        nn.save('model', () => {console.log('model saved')})
         console.log('done!');
-        console.log(nn.model)
+        // console.log(nn)
 
       }    
     nn.train(trainingOptions, doneTraining);
 
-    nn.save('model', () => {console.log('model saved')})
 
     
     // function finishedTraining(){
@@ -192,7 +191,7 @@ function handleResults(error, result) {
     let p = document.createElement('p')
     document.body.insertAdjacentElement('beforeend', p)
 
-    if (maxPossibility > 0.7) {
+    if (maxPossibility > 0.6) {
 
         let prediction = result[confidences.indexOf(maxPossibility)].label
         console.log(prediction); // prints label of result with highest confidence
@@ -207,6 +206,10 @@ function handleResults(error, result) {
 }  
 
 export const testNN = (data) => {
+
+
+    console.log(nn.neuralNetwork)
+
 
     // console.log(data)
     // let input = data.map(period => period.map(value => value + Math.random()))
@@ -231,6 +234,15 @@ export const testNN = (data) => {
     nn.classify(input, handleResults)
 
 
+}
+
+export const loadModel = async () => {
+    // const modelDetails = {
+    //     model: './model.json',
+    //     metadata: './model_meta.json',
+    //     weights: './model.weights.bin'
+    // }
+    await nn.load('./model.json', () => { console.log('Model loaded') })
 }
 
 
