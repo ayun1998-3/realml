@@ -1,6 +1,16 @@
 import * as components from "https://cdn.jsdelivr.net/npm/brainsatplay-components@latest/dist/index.esm.js"
 
-export const simulateAudio = (func, onSuccess, duration) => { //duration of recording in seconds
+let endAudio = false
+
+export const terminate = () => {
+    endAudio = true
+    console.log(endAudio)
+}
+
+export const simulateAudio = (func, onSuccess, duration = 10) => { //duration of recording in seconds
+
+    endAudio = false
+
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
 
         const spectrogram = new components.streams.data.Spectrogram()
@@ -60,7 +70,7 @@ export const simulateAudio = (func, onSuccess, duration) => { //duration of reco
 
             // console.log(raw, frequencies)f
 
-            if (time === 100 * duration) { //end stream after reaching duration
+            if (time === 100 * duration || endAudio) { //end stream after reaching duration
                 stream.onended()
                 clearInterval(myInterval)
                 spectrogram.remove()

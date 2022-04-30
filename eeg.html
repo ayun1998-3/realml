@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,9 +11,13 @@
 </head>
 
 <body style="padding: 10px;">
+    <p><a href="index.html">Home</a></p>
+
     <h1>datastreams-api</h1>
     <hr>
     <br>
+
+    <p>Press 'O' to record while blinking. Press 'P' to record while eyes are open.</p>
 
     <div id="buttons">
         <button id="device">Synthetic</button>
@@ -23,6 +28,12 @@
     <div id="graph">
 
     </div>
+
+    <div id="trainingUI">
+
+    </div>
+
+
 </body>
 
 <script type="module">
@@ -30,7 +41,13 @@
     // ------------- Import Libraries -------------
 
     // User Interface
-    import * as components from "https://cdn.jsdelivr.net/npm/brainsatplay-ui@0.0.7/dist/index.esm.js"    
+    import * as components from "https://cdn.jsdelivr.net/npm/brainsatplay-ui@0.0.7/dist/index.esm.js"
+
+
+    const end = document.createElement('button')
+    end.innerHTML = 'End Recording'
+    trainingUI.insertAdjacentElement('beforeend', end)
+
 
     // Data Acquisition
     // import * as datastreams from "./src/frontend/dist/index.esm.js"
@@ -43,6 +60,9 @@
     import device from "https://cdn.jsdelivr.net/npm/@brainsatplay/device@0.0.2/dist/index.esm.js"
     import hegduino from "https://cdn.jsdelivr.net/npm/@brainsatplay/hegduino@0.0.4/dist/index.esm.js"
 
+    // Local Library
+    import * as timer from './src/time.js'
+
     dataDevices.load(muse)
     dataDevices.load(device)
     dataDevices.load(ganglion)
@@ -51,22 +71,30 @@
     // ------------- Setup Visualization (very rough) -------------
     const graphDiv = document.getElementById('graph')
     graphDiv.style.padding = '25px'
-    const timeseries = new components.streams.data.TimeSeries()
-    graphDiv.insertAdjacentElement('beforeend', timeseries)
+    let timeseries
+
 
     // ------------- Declare Global Variables -------------
     const allData = []
+    const training = []
+    const labels = []
     let channels = 0
     let trackMap = new Map()
     let contentHintToIndex = {}
+    let endStream = false
+    let deviceType = 'device'
+    let channelCount = 3
+    let dataType
 
     // ------------- Declare Data Handler -------------
     const ondata = (data, timestamps, contentHint) => {
-        console.log(`Data from Electrode ${contentHintToIndex[contentHint]} (${contentHint})`, data, timestamps)
+        // console.log(`Data from Electrode ${contentHintToIndex[contentHint]} (${contentHint})`, data, timestamps)
+
+        if (pressed) training[contentHint].push(data[0])
     }
 
     // ------------- Declare Track Handler -------------
-    const handleTrack = (track) => { 
+    const handleTrack = (track) => {
 
         // ------------- Map Track Information (e.g. 10-20 Coordinate) to Index -------------
         if (!trackMap.has(track.contentHint)) {
@@ -74,17 +102,19 @@
             contentHintToIndex[track.contentHint] = index
             trackMap.set(index, track)
         }
-        
+
         // ------------- Grab Index -------------
         const i = contentHintToIndex[track.contentHint]
+        console.log(track.contentHint, i)
         channels = (i > channels) ? i : channels // Assign channels as max track number
+        console.log('CHANNELS', channels)
 
         // ------------- Subscribe to New Data -------------
         track.subscribe((data, timestamps) => {
 
             // Organize New Data
             let arr = []
-            for (let j = 0 ; j <= channels; j++) (i === j) ? arr.push(data) : arr.push([])
+            for (let j = 0; j <= channels; j++) (i === j) ? arr.push(data) : arr.push([])
 
             // Add Data to Timeseries Graph
             timeseries.data = arr
@@ -92,6 +122,14 @@
 
             // Run ondata Callback
             ondata(data, timestamps, track.contentHint)
+            if (pressed) {
+                if (dataType === 'Blink') {
+                    labels.push('blink')
+                }
+                else if (dataType === 'Open') {
+                    labels.push('open')
+                }
+            }
         })
     }
 
@@ -99,10 +137,18 @@
 
     const startAcquisition = async (label) => {
 
+        timeseries = new components.streams.data.TimeSeries()
+        graphDiv.insertAdjacentElement('beforeend', timeseries)
+
+
+        for (let i = 0; i < channelCount; i++) {
+            training.push([])
+        }
         // ------------- Get Device Stream -------------
 
         // Method #1: By Label
-        const dataDevice = await dataDevices.getUserDevice({label, bluetooth: true})
+        const dataDevice = await dataDevices.getUserDevice({ label, bluetooth: true })
+        console.log(dataDevice)
 
         // Method #2: By Class
         // const dataDevice = await dataDevices.getUserDevice(ganglion)
@@ -112,12 +158,75 @@
 
         // ------------- Handle All Tracks -------------
         stream.tracks.forEach(handleTrack)
-        stream.onaddtrack = e => handleTrack(e.track)
+
+
+        // wait for endStream to be true and then end stream
+        let delay1 = await setInterval(() => {
+            if (endStream) {
+                clearInterval(delay1)
+                stream.tracks.forEach(track => stream.removeTrack(track))
+            }
+        })
+
+
+
+        // stream.onaddtrack = e => handleTrack(e.track)
+        // stream.removeTrack()
     }
 
     // ------------- Set Button Functionality -------------
     const buttons = document.querySelector('#buttons')
-    for (let button of buttons.querySelectorAll('button')) button.onclick = () => startAcquisition(button.id)
+    for (let button of buttons.querySelectorAll('button')) {
+        button.onclick = () => {
+            deviceType = button.id
+            console.log(button.id)
+            startAcquisition(button.id)
+
+            switch (deviceType) {
+                case 'device': channelCount = 3
+                    break
+                case 'muse': channelCount = 8
+                    break
+                case 'ganglion': channelCount = 0
+                    break
+                case 'hegduino': channelCount = 0
+                    break
+            }
+        }
+    }
+
+    end.onclick = () => {
+        endStream = true
+    }
+
+    let pressed = false // indicate whether key is already pressed
+    window.onkeydown = (ev) => {
+
+
+        if (!pressed) {
+            let temp = []
+            endStream = false
+
+            if (ev.code === 'KeyO') {
+                console.log('recording blinks')
+                dataType = 'Blink'
+            }
+
+            else if (ev.code === 'KeyP') {
+                console.log('recording eyes open')
+                dataType = 'Open'
+            }
+            pressed = true
+        }
+    }
+
+    window.onkeyup = (ev) => {
+
+        console.log('recording ended')
+        console.log('Training: ', training)
+        console.log('Labels: ', labels)
+        pressed = false
+    }
 
 </script>
 

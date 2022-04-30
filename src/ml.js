@@ -72,7 +72,7 @@ export const trainNN = (data, labels) => {
     console.log(labels)
 
     // remove zeroes from data to prepare data for nn.normalizedata
-    // data = data.map(sample => sample.map(period => period.map(value => value + Math.random())))
+    data = data.map(sample => sample.map(period => period.map(value => value + Math.random())))
 
     // for (let value = 0; value < data[0][0].length; value ++) {
     //     let isZero = true
@@ -155,7 +155,7 @@ export const trainNN = (data, labels) => {
 
     }
     function doneTraining() {
-        nn.save('model', () => {console.log('model saved')})
+        // nn.save('model', () => {console.log('model saved')})
         console.log('done!');
         // console.log(nn)
 

@@ -1,4 +1,4 @@
-export const timer = (duration, display = true, frequency = 1) => { //duration of countdown in seconds, frequency of display per second, whether countdown is displayed
+export const timer = (duration, display = false, frequency = 1) => { //duration of countdown in seconds,  whether countdown is displayed, frequency of display per second
 
     let t = duration
     return new Promise((resolve, reject) => {
