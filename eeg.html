@@ -88,14 +88,16 @@
 
     // ------------- Declare Data Handler -------------
     const ondata = (data, timestamps, contentHint) => {
-        // console.log(`Data from Electrode ${contentHintToIndex[contentHint]} (${contentHint})`, data, timestamps)
+        console.log(`Data from Electrode ${contentHintToIndex[contentHint]} (${contentHint})`, data, timestamps)
 
-        if (pressed) training[contentHint].push(data[0])
+        // if (pressed) training[contentHint].push(data[0])
     }
 
     // ------------- Declare Track Handler -------------
     const handleTrack = (track) => {
 
+
+        console.log('...')
         // ------------- Map Track Information (e.g. 10-20 Coordinate) to Index -------------
         if (!trackMap.has(track.contentHint)) {
             const index = trackMap.size
@@ -103,6 +105,7 @@
             trackMap.set(index, track)
         }
 
+        console.log('!!')
         // ------------- Grab Index -------------
         const i = contentHintToIndex[track.contentHint]
         console.log(track.contentHint, i)
@@ -154,12 +157,14 @@
         // const dataDevice = await dataDevices.getUserDevice(ganglion)
 
         // ------------- Grab DataStream from Device -------------
+        console.log('HERE')
         const stream = dataDevice.stream
 
         // ------------- Handle All Tracks -------------
+        console.log('here')
         stream.tracks.forEach(handleTrack)
 
-
+    
         // wait for endStream to be true and then end stream
         let delay1 = await setInterval(() => {
             if (endStream) {
@@ -180,18 +185,20 @@
         button.onclick = () => {
             deviceType = button.id
             console.log(button.id)
+
+            // switch (deviceType) {
+            //     case 'device': channelCount = 3
+            //         break
+            //     case 'muse': channelCount = 8
+            //         break
+            //     case 'ganglion': channelCount = 0
+            //         break
+            //     case 'hegduino': channelCount = 0
+            //         break
+            // }
             startAcquisition(button.id)
 
-            switch (deviceType) {
-                case 'device': channelCount = 3
-                    break
-                case 'muse': channelCount = 8
-                    break
-                case 'ganglion': channelCount = 0
-                    break
-                case 'hegduino': channelCount = 0
-                    break
-            }
+
         }
     }
 
