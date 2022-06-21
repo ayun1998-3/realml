@@ -8,6 +8,12 @@
     <title>datastreams-api</title>
     <!-- <script src="https://cdn.jsdelivr.net/npm/@brainsatplay/ganglion"></script> -->
     <!-- <script src="https://cdn.jsdelivr.net/npm/datastreams-api"></script> -->
+    <script src="./libraries/ml.min.js"></script>
+    <!-- <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.0.2/dist/tfjs-vis.umd.min.js"></script>
+
+
 </head>
 
 <body style="padding: 10px;">
@@ -17,7 +23,7 @@
     <hr>
     <br>
 
-    <p>Press 'O' to record while blinking. Press 'P' to record while eyes are open.</p>
+    <p>Press 'B' to record while blinking. Press 'O' to record while eyes are open.</p>
 
     <div id="buttons">
         <button id="device">Synthetic</button>
@@ -44,9 +50,15 @@
     import * as components from "https://cdn.jsdelivr.net/npm/brainsatplay-ui@0.0.7/dist/index.esm.js"
 
 
-    const end = document.createElement('button')
-    end.innerHTML = 'End Recording'
-    trainingUI.insertAdjacentElement('beforeend', end)
+    // const end = document.createElement('button')
+    // end.innerHTML = 'End Recording'
+    // trainingUI.insertAdjacentElement('beforeend', end)
+    const train = document.createElement('button')
+    train.innerHTML = 'Train Model'
+    trainingUI.insertAdjacentElement('beforeend', train)
+    const test = document.createElement('button')
+    test.innerHTML = 'Test Model'
+    trainingUI.insertAdjacentElement('beforeend', test)
 
 
     // Data Acquisition
@@ -60,9 +72,13 @@
     import device from "https://cdn.jsdelivr.net/npm/@brainsatplay/device@0.0.2/dist/index.esm.js"
     import hegduino from "https://cdn.jsdelivr.net/npm/@brainsatplay/hegduino@0.0.4/dist/index.esm.js"
 
-    // Local Library
+    // Local Libraries
     import * as timer from './src/time.js'
+    import * as ml from './src/ml.js'
+    import * as ml5 from './libraries/ml.min.js'
 
+
+    // ml.tfTrain()
     dataDevices.load(muse)
     dataDevices.load(device)
     dataDevices.load(ganglion)
@@ -75,29 +91,65 @@
 
 
     // ------------- Declare Global Variables -------------
-    const allData = []
+    let sampleData = []
     const training = []
     const labels = []
+    const windowSize = 5
     let channels = 0
     let trackMap = new Map()
     let contentHintToIndex = {}
-    let endStream = false
+    // let endStream = false
     let deviceType = 'device'
     let channelCount = 3
-    let dataType
+    let sample = 0
+    let testing = false
+    const testdata = []
+    const class1 = 'Blinking'
+    const class2 = 'Eyes Open'
+
+    let counter = 0
+    let g = 0
+    let ultrasum = 0
 
     // ------------- Declare Data Handler -------------
     const ondata = (data, timestamps, contentHint) => {
-        console.log(`Data from Electrode ${contentHintToIndex[contentHint]} (${contentHint})`, data, timestamps)
+        // console.log(`Data from Electrode ${contentHintToIndex[contentHint]} (${contentHint})`, data, timestamps)
 
-        // if (pressed) training[contentHint].push(data[0])
+        if (contentHint === 'AF7') {
+            g ++
+            ultrasum += data.reduce((x, y) => x + y)/12
+            if (g === 10) {
+                console.log(ultrasum/10)
+                ultrasum = 0
+                g = 0
+            }
+            // if (g === 10) {
+            //     const avg = data.reduce((x, y) => x + y)/12
+            //     console.log(avg)
+            //     g = 0
+            // }
+        }
+        if (pressed) {
+            // sampleData[contentHintToIndex[contentHint]].push(data)
+
+            for (let i = 0; i < 12; i++) {
+                if (typeof sampleData[counter + i] === 'undefined') {
+                    sampleData.push([])
+                }
+                const value = data[i]
+                sampleData[counter + i].push(value)
+            }
+
+            if (sampleData[counter].length === 4) counter += 12
+        }
+
+        if (testing) testdata[contentHintToIndex[contentHint]].push(data)
     }
 
     // ------------- Declare Track Handler -------------
     const handleTrack = (track) => {
 
 
-        console.log('...')
         // ------------- Map Track Information (e.g. 10-20 Coordinate) to Index -------------
         if (!trackMap.has(track.contentHint)) {
             const index = trackMap.size
@@ -105,12 +157,10 @@
             trackMap.set(index, track)
         }
 
-        console.log('!!')
         // ------------- Grab Index -------------
         const i = contentHintToIndex[track.contentHint]
-        console.log(track.contentHint, i)
+        // console.log(track.contentHint, i)
         channels = (i > channels) ? i : channels // Assign channels as max track number
-        console.log('CHANNELS', channels)
 
         // ------------- Subscribe to New Data -------------
         track.subscribe((data, timestamps) => {
@@ -125,14 +175,14 @@
 
             // Run ondata Callback
             ondata(data, timestamps, track.contentHint)
-            if (pressed) {
-                if (dataType === 'Blink') {
-                    labels.push('blink')
-                }
-                else if (dataType === 'Open') {
-                    labels.push('open')
-                }
-            }
+            // if (pressed) {
+            //     if (dataType === 'Blink') {
+            //         labels.push('blink')
+            //     }
+            //     else if (dataType === 'Open') {
+            //         labels.push('open')
+            //     }
+            // }
         })
     }
 
@@ -144,9 +194,7 @@
         graphDiv.insertAdjacentElement('beforeend', timeseries)
 
 
-        for (let i = 0; i < channelCount; i++) {
-            training.push([])
-        }
+
         // ------------- Get Device Stream -------------
 
         // Method #1: By Label
@@ -157,25 +205,23 @@
         // const dataDevice = await dataDevices.getUserDevice(ganglion)
 
         // ------------- Grab DataStream from Device -------------
-        console.log('HERE')
         const stream = dataDevice.stream
+        console.log(stream)
 
         // ------------- Handle All Tracks -------------
-        console.log('here')
         stream.tracks.forEach(handleTrack)
+        stream.onaddtrack = e => handleTrack(e.track)
 
-    
         // wait for endStream to be true and then end stream
-        let delay1 = await setInterval(() => {
-            if (endStream) {
-                clearInterval(delay1)
-                stream.tracks.forEach(track => stream.removeTrack(track))
-            }
-        })
+        // let delay1 = await setInterval(() => {
+        //     if (endStream) {
+        //         stream.tracks.forEach(track => stream.removeTrack(track))
+        //         clearInterval(delay1)
+        //     }
+        // })
 
 
 
-        // stream.onaddtrack = e => handleTrack(e.track)
         // stream.removeTrack()
     }
 
@@ -183,56 +229,135 @@
     const buttons = document.querySelector('#buttons')
     for (let button of buttons.querySelectorAll('button')) {
         button.onclick = () => {
-            deviceType = button.id
-            console.log(button.id)
 
-            // switch (deviceType) {
-            //     case 'device': channelCount = 3
-            //         break
-            //     case 'muse': channelCount = 8
-            //         break
-            //     case 'ganglion': channelCount = 0
-            //         break
-            //     case 'hegduino': channelCount = 0
-            //         break
+            deviceType = button.id
+            switch (deviceType) {
+                case 'device': channelCount = 3
+                    break
+                case 'muse': channelCount = 4
+                    break
+                case 'ganglion': channelCount = 0
+                    break
+                case 'hegduino': channelCount = 0
+                    break
+            }
+            console.log(button.id)
+            console.log(channelCount)
+            // for (let i = 0; i < channelCount; i++) {
+            //     training.push([])
             // }
             startAcquisition(button.id)
-
-
         }
     }
 
-    end.onclick = () => {
-        endStream = true
-    }
+    // end.onclick = () => {
+    //     endStream = true
+    // }
 
     let pressed = false // indicate whether key is already pressed
     window.onkeydown = (ev) => {
 
 
-        if (!pressed) {
-            let temp = []
-            endStream = false
+        if (!pressed && (ev.code === 'KeyB' || ev.code === 'KeyO')) {
+            // endStream = false
 
-            if (ev.code === 'KeyO') {
+            if (ev.code === 'KeyB') {
                 console.log('recording blinks')
-                dataType = 'Blink'
+                // labels.push('blink')
             }
 
-            else if (ev.code === 'KeyP') {
+            else if (ev.code === 'KeyO') {
                 console.log('recording eyes open')
-                dataType = 'Open'
+                // labels.push('open')
             }
+
+            // training.push([]) //create new sample
+            // for (let i = 0; i < channelCount; i++) {
+            //     sampleData.push([])
+            // }
             pressed = true
         }
     }
 
     window.onkeyup = (ev) => {
+        if (ev.code === 'KeyB' || ev.code === 'KeyO') {
+            console.log('recording ended')
 
-        console.log('recording ended')
-        console.log('Training: ', training)
-        console.log('Labels: ', labels)
-        pressed = false
+            console.log('sampleData', sampleData)
+            // const segmentedData = []
+
+            for (let i = 0; i < sampleData.length - 60; i += 60) {
+                const sample = sampleData.slice(i, i + 60)
+                training.push(sample)
+                if (ev.code === 'KeyB') labels.push([1, 0])
+                else labels.push([0, 1])
+            }
+            // for (let i = 0; i < sampleData[0].length - windowSize; i += (windowSize - 1)) {
+            //     const temp = []
+            //     for (let c = 0; c < sampleData.length; c++) {
+            //         temp.push(sampleData[c].slice(i, i + windowSize).flat())   //DATA IS 4 x 60 now
+            //         if (c === 0) {                                  // Only runs for the first channel
+            //             if (ev.code === 'KeyB') labels.push([1, 0])
+            //             else labels.push([0, 1])
+            //         }
+            //     }
+            //     segmentedData.push(temp)
+            // }
+            // console.log(segmentedData)
+
+            // segmentedData.forEach(value => { training.push(value) })
+
+            console.log(training)
+
+            // console.log('Training: ', training)
+            // console.log('Labels: ', labels)
+            // sample++
+            // sampleData = []
+            pressed = false
+        }
+    }
+
+    train.onclick = () => {
+        ml.tfTrain(training, labels)
+        // ml.trainNN(training, labels)
+    }
+
+    test.onclick = async () => {
+
+        testing = true
+        for (let i = 0; i < channelCount; i++) {
+            testdata.push([])
+        }
+        let testLoop = await setInterval(async () => {
+            const temp = []
+            // const testWindow = []
+            // for (let c = 0; c < testdata.length; c++) {
+            //     testWindow.push(testdata[c].slice((-1) * (windowSize)))
+            // }
+
+            // const testWindows = []
+            // for (let i = 0; i < 3; i++) {
+            //     let j = testdata[0].length + 1
+            //     const testWindow = testdata.map(channel => channel.slice((-1) * (windowSize) - i, i == 0 ? (j) : (-1 * i)))
+            //     testWindows.push(testWindow)
+            // }
+            const testWindow = testdata.map(channel => channel.slice((-1) * (windowSize)).flat())
+            console.log(testWindow)
+
+            let results = await ml.tfTest(testWindow)
+            // console.log(results, results[0])
+            const maxPossibility = Math.max(...results[0])
+            console.log(results[0])
+
+            let prediction = class2
+            if (maxPossibility === results[0]) {
+                prediction = class1
+            }
+            let p = document.createElement('p')
+            document.body.insertAdjacentElement('beforeend', p)
+            p.innerHTML = `Prediction: ${prediction} \n Confidence: ${maxPossibility}`
+
+        }, 500)
     }
 
 </script>
