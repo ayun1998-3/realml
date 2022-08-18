@@ -115,20 +115,22 @@
     const ondata = (data, timestamps, contentHint) => {
         // console.log(`Data from Electrode ${contentHintToIndex[contentHint]} (${contentHint})`, data, timestamps)
 
-        if (contentHint === 'AF7') {
-            g ++
-            ultrasum += data.reduce((x, y) => x + y)/12
-            if (g === 10) {
-                console.log(ultrasum/10)
-                ultrasum = 0
-                g = 0
-            }
-            // if (g === 10) {
-            //     const avg = data.reduce((x, y) => x + y)/12
-            //     console.log(avg)
-            //     g = 0
-            // }
-        }
+        // if (contentHint === 'AF7') { // printing out avg values for data samples to see if it helps (did not help)
+        //     g ++
+        //     let sampleVal = data.reduce((x, y) => x + y)/12
+        //     // console.log(sampleVal)
+        //     ultrasum += sampleVal
+        //     if (g === 10) {
+        //         console.log('ultra', ultrasum/10)
+        //         ultrasum = 0
+        //         g = 0
+        //     }
+        //     // if (g === 10) {
+        //     //     const avg = data.reduce((x, y) => x + y)/12
+        //     //     console.log(avg)
+        //     //     g = 0
+        //     // }
+        // }
         if (pressed) {
             // sampleData[contentHintToIndex[contentHint]].push(data)
 
@@ -171,6 +173,7 @@
 
             // Add Data to Timeseries Graph
             timeseries.data = arr
+            timeseries.seconds = "20"
             timeseries.draw() // FORCE DRAW: Update happens too fast for UI
 
             // Run ondata Callback
